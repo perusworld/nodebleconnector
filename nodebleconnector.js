@@ -64,11 +64,11 @@ BLEConnector.prototype.stopScanning = function (peripheral) {
 }
 
 BLEConnector.prototype.onPeripheralDiscovered = function (peripheral) {
-	console.log('on -> discover: ' + peripheral);
 	if (null == this.filter || this.filter(peripheral)) {
 		if (this.stopOnFirst) {
 			noble.stopScanning();
 		}
+		console.log('on -> discover: ' + peripheral);
 		new BLEPeripheralConnector(peripheral, this);
 	}
 }
