@@ -1,0 +1,30 @@
+{
+  "name": "nodebleconnector",
+  "version": "1.0.0",
+  "description": "Node.js BLE Communication Connector Helper Module",
+  "main": "nodebleconnector.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/perusworld/nodebleconnector.git"
+  },
+  "keywords": [
+    "ble",
+    "scan",
+    "connector",
+    "central",
+    "nodejs"
+  ],
+  "author": "Saravana Perumal Shanmugam <saravanaperumal@msn.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/perusworld/nodebleconnector/issues"
+  },
+  "homepage": "https://github.com/perusworld/nodebleconnector",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "noble": "^1.1.0"
+  }
+}
