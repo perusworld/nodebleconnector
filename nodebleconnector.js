@@ -13,7 +13,7 @@ function BLEConnector() {
 	this.readCharacteristic = null;
 }
 
-BLEConnector.prototype.scanByFilter = function (serviceUUID, txUUID, rxUUID, stopOnFirst, onSetup, onDataCallback, filter) {
+BLEConnector.prototype.scanByFilter = function (serviceUUID, txUUID, rxUUID, stopOnFirst, onSetup, onDataCallback, filter, scanAll) {
 	this.serviceUUID = serviceUUID;
 	this.txUUID = txUUID;
 	this.rxUUID = rxUUID;
@@ -23,6 +23,7 @@ BLEConnector.prototype.scanByFilter = function (serviceUUID, txUUID, rxUUID, sto
 	this.filter = filter;
 	this.writeCharacteristic = null;
 	this.readCharacteristic = null;
+	this.scanAll = scanAll;
 
 	noble.on('scanStart', this.onScanStart.bind(this));
 
@@ -35,11 +36,15 @@ BLEConnector.prototype.scanByFilter = function (serviceUUID, txUUID, rxUUID, sto
 }
 
 BLEConnector.prototype.scanAnyOne = function (serviceUUID, txUUID, rxUUID, onSetup, onDataCallback) {
-	this.scanByFilter(serviceUUID, txUUID, rxUUID, true, onSetup, onDataCallback, function (pheripheral) { return true; });
+	this.scanByFilter(serviceUUID, txUUID, rxUUID, true, onSetup, onDataCallback, function (pheripheral) { return true; }, false);
 }
 
 BLEConnector.prototype.scanById = function (deviceId, serviceUUID, txUUID, rxUUID, onSetup, onDataCallback) {
-	this.scanByFilter(serviceUUID, txUUID, rxUUID, true, onSetup, onDataCallback, function (pheripheral) { return deviceId == pheripheral.id; });
+	this.scanByFilter(serviceUUID, txUUID, rxUUID, true, onSetup, onDataCallback, function (pheripheral) { return deviceId == pheripheral.id; }, false);
+}
+
+BLEConnector.prototype.scanAllById = function (deviceId, serviceUUID, txUUID, rxUUID, onSetup, onDataCallback) {
+	this.scanByFilter(serviceUUID, txUUID, rxUUID, true, onSetup, onDataCallback, function (pheripheral) { return deviceId == pheripheral.id; }, true);
 }
 
 BLEConnector.prototype.onScanStart = function () {
@@ -53,7 +58,13 @@ BLEConnector.prototype.onScanStop = function () {
 BLEConnector.prototype.onStateChange = function (state) {
 	console.log('on -> stateChange: ' + state);
 	if (state === 'poweredOn') {
-		noble.startScanning([this.serviceUUID]);
+		if (this.scanAll) {
+			console.log('scanning  all');
+			noble.startScanning();
+		} else {
+			console.log('scanning by : ' + this.serviceUUID);
+			noble.startScanning([this.serviceUUID]);
+		}
 	} else {
 		noble.stopScanning();
 	}
@@ -83,7 +94,13 @@ function BLEPeripheralConnector(peripheral, sender) {
 }
 
 BLEPeripheralConnector.prototype.onPeripheralConnected = function () {
-	this.currentPeripheral.discoverSomeServicesAndCharacteristics([this.sender.serviceUUID], [this.sender.txUUID, this.sender.rxUUID], this.onDiscoveredServicesAndCharacteristics.bind(this));
+	if (null != this.sender.txUUID && null != this.sender.txUUID) {
+		this.currentPeripheral.discoverSomeServicesAndCharacteristics([this.sender.serviceUUID], [this.sender.txUUID, this.sender.rxUUID], this.onDiscoveredServicesAndCharacteristics.bind(this));
+	} else if (null != this.sender.txUUID) {
+		this.currentPeripheral.discoverSomeServicesAndCharacteristics([this.sender.serviceUUID], [this.sender.txUUID], this.onDiscoveredServicesAndCharacteristics.bind(this));
+	} else {
+		this.currentPeripheral.discoverSomeServicesAndCharacteristics([this.sender.serviceUUID], [this.sender.rxUUID], this.onDiscoveredServicesAndCharacteristics.bind(this));
+	}
 }
 
 BLEPeripheralConnector.prototype.onPeripheralDisconnected = function () {
@@ -95,11 +112,15 @@ BLEPeripheralConnector.prototype.onDiscoveredServicesAndCharacteristics = functi
 		var writeSet = false;
 		var readSet = false;
 		characteristics.forEach(function (characteristic) {
-			if (this.sender.txUUID == characteristic.uuid) {
+			if (null == this.sender.txUUID) {
+				writeSet = true;
+			} else if (this.sender.txUUID == characteristic.uuid) {
 				this.writeCharacteristic = characteristic;
 				writeSet = true;
 			}
-			if (this.sender.rxUUID == characteristic.uuid) {
+			if (null == this.sender.rxUUID) {
+				readSet = true;
+			} else if (this.sender.rxUUID == characteristic.uuid) {
 				this.readCharacteristic = characteristic;
 				characteristic.on('read', this.onData.bind(this));
 				characteristic.notify(true);
