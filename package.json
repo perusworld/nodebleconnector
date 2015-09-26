@@ -1,6 +1,6 @@
 {
   "name": "nodebleconnector",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Node.js BLE Communication Connector Helper Module",
   "main": "nodebleconnector.js",
   "scripts": {
