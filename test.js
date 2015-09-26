@@ -4,16 +4,25 @@ var readline = require('readline');
 var bleConnector = new nodebleconnector.BLEConnector();
 var blePheripherals = [];
 
-bleConnector.scanAnyOne("1901", "1", "2", function (status, sender) {
-	blePheripherals.push(sender);
-	if (status) {
-		console.log("eveything is setup fine, you can start sending messages now");
-	} else {
-		console.log("failed to setup the communication");
+var conf = {
+	serviceUUID: "1901",
+	txUUID: "1",
+	rxUUID: "2",
+	stopOnFirst: true,
+	scanAll: false,
+	onSetup: function (status, sender) {
+		blePheripherals.push(sender);
+		if (status) {
+			console.log("eveything is setup fine, you can start sending messages now");
+		} else {
+			console.log("failed to setup the communication");
+		}
+	},
+	onDataCallback: function (data, isNotification, sender) {
+		console.log("got data -> " + data);
 	}
-}, function (data, isNotification, sender) {
-	console.log("got data -> " + data);
-});
+};
+bleConnector.scanAny(conf);
 
 
 this.rl = readline.createInterface(process.stdin, process.stdout);
